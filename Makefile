@@ -1,8 +1,11 @@
 run_text: env
-	pipenv run python3.10 text_test.py
+	pipenv run python3.10 src/text_test.py
 
 run_img: env
-	pipenv run python3.10 img_test.py
+	FILE_PATH=data/bug.jpg pipenv run python3.10 src/img_test.py
+
+run_pdf: env
+	FILE_PATH=data/eMediplan_de.pdf pipenv run python3.10 src/pdf_test.py
 
 env:
 	pipenv install

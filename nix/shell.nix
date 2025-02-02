@@ -6,6 +6,8 @@ pkgs.mkShell {
     python310Packages.pip
     pipenv
 
+    poppler_utils
+
     ruff
   ];
 }

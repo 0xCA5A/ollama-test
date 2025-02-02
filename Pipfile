@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 ollama = "*"
 requests = "*"
+pdf2image = "*"
 
 [dev-packages]
 
