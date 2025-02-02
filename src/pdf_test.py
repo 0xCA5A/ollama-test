@@ -3,6 +3,9 @@ import base64
 import os
 import json
 from pdf2image import convert_from_path
+import pytesseract
+from PIL import Image
+
 
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
 
@@ -23,47 +26,88 @@ if __name__ == "__main__":
     for i, image in enumerate(images):
         image.save(f"tmp/page_{i + 1}.png", "PNG")
 
-    image_base64 = encode_image("tmp/page_1.png")
+    image = Image.open("tmp/page_1.png")
 
-    model = "llama3.2:1b"
-    prompt = """
+    # Get text output
+    text = pytesseract.image_to_string(image)
+    # Get HOCR output
+    # hocr = repr( pytesseract.image_to_pdf_or_hocr(image, extension='hocr'))
+    # Get ALTO XML output
+    # alto = repr(pytesseract.image_to_alto_xml(image))
+
+    model = "phi4:latest"
+
+    instruction = f"""
     You are a health professional, a doctor or a pharmacist.
 
-    Can you extract the medication of this medical prescription or medication plan?
+    Extract all information from this medication plan or medical prescription im the text format: 
 
+    [INPUT]
+
+    {text}
+
+    [END_INPUT]
+
+    """
+
+    details = """
     The medical prescription or medication plan can be provided is in German, French or Italian language.
 
     The result is expected to be in this format:
     {
-        prescribingDoctor: {
-            academicTitle: "",
-            givenName: "",
-            familyName: "",
+        "prescribingDoctor": {
+            "academicTitle": "",
+            "givenName": "",
+            "familyName": "",
+            "zsrNumber": "",
+            "gln": "",
         }
-        patient: {
-            givenName: "",
-            familyName: "",
-            addressLine: "",
-            postalCode: "",
-            city: ""
+        "patient": {
+            "givenName": "",
+            "familyName": "",
+            "birthDate": "",
+            "sex": "",
+            "addressLine": "",
+            "postalCode": "",
+            "city": ""
         }
-        medication: [
+        "medication": [
             {
                 "name": "",
-                "intakeInstruction: "0-0-0-0"
+                "unit": "",
+                "intakeInstruction: "",
+                "remark": ""
             }
         ]
     }
 
-    The format of the intake instruction is Mo (Morgen), Mi (Mittag), Ab (Abends), Na (zur Nacht).
+    The patients postal code (postalCode) and the city (city) are related to each other.
+    The postal code format is a number with 4 digits.
+
+    The medicament intake instructions instruct the patient how to take the medication.
+    The instructions refer to daytime signs such as morning, noon, evening and night.
+    The format of the intake instruction in German is
+     - Mo (Morgen) for morning
+     - Mi (Mittag) for midday
+     - Ab (Abends) for evening
+     - Na (zur Nacht) for night
+    For each time of day, a numerical value defines how much of a medication a patient must take.
+
     The short format is 0-0-0-0.
+
+    An example would be 1-0-0.5-0.
+    This means one unit in the morning, 0.5 unit in the evening.
+
+    If the intake instruction found does not match the specified format, the information should be returned as remark.
     """
+
+    prompt = instruction + details
 
     print("Model: {}".format(model))
     print("Prompt: {}".format(prompt))
     print("Input file: {}".format(file_path))
 
-    payload = {"model": model, "prompt": prompt, "image": image_base64}
+    payload = {"model": model, "prompt": prompt}
 
     print("Calling model...")
     response = requests.post(OLLAMA_API_URL, json=payload)

@@ -7,6 +7,7 @@ pkgs.mkShell {
     pipenv
 
     poppler_utils
+    tesseract4
 
     ruff
   ];

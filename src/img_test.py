@@ -20,6 +20,8 @@ if __name__ == "__main__":
 
     image_base64 = encode_image(file_path)
 
+    # Vision models: can handle both images and text. They accept images as input and can describe, analyze, or reason
+    # about their content
     model = "llava:34b"
     prompt = """
     Describe this image. What can you see?

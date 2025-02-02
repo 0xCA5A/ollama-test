@@ -7,6 +7,8 @@ name = "pypi"
 ollama = "*"
 requests = "*"
 pdf2image = "*"
+pytesseract = "*"
+pillow = "*"
 
 [dev-packages]
 
