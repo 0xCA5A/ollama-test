@@ -1,9 +1,16 @@
 import requests
+import os
 
-OLLAMA_API_URL = "http://localhost:11434/api/generate"
+# Ollama API Spec:
+# https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
+
+
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
+
 
 if __name__ == "__main__":
-    model = "llama3.2:3b"
+    model = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+
     prompt = """
     You are master Yoda from Star Wars.
     
@@ -16,7 +23,7 @@ if __name__ == "__main__":
     print("Prompt: {}".format(prompt))
 
     print("Calling model...")
-    response = requests.post(OLLAMA_API_URL, json=payload)
+    response = requests.post(OLLAMA_API_URL, json=payload, verify=False)
     response.raise_for_status()
 
     if response.status_code != 200:

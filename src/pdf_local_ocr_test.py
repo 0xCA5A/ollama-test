@@ -1,7 +1,8 @@
 import requests
-import base64
 import json
 from pdf2image import convert_from_path
+import pytesseract
+from PIL import Image
 import os
 
 # Ollama API Spec:
@@ -11,15 +12,8 @@ import os
 OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
 
 
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
-
-
 if __name__ == "__main__":
-    # Vision models: can handle both images and text. They accept images as input and can describe, analyze, or reason
-    # about their content
-    model = os.getenv("OLLAMA_MODEL", "llama3.2-vision:11b")
+    model = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
 
     file_path = os.getenv("FILE_PATH")
 
@@ -27,18 +21,29 @@ if __name__ == "__main__":
         raise Exception("mandatory FILE_PATH environment variable is not set")
 
     # PDF to image
-    pdf_page_images = convert_from_path(file_path, dpi=300)
-    images_base64 = []
-    for i, image in enumerate(pdf_page_images):
-        file_name = f"tmp/page_{i + 1}.png"
-        image.save(file_name, "PNG")
-        encoded = encode_image(file_name)
-        images_base64.append(encoded)
+    images = convert_from_path(file_path, dpi=300)
+    for i, image in enumerate(images):
+        image.save(f"tmp/page_{i + 1}.png", "PNG")
 
-    instruction = """
+    image = Image.open("tmp/page_1.png")
+
+    # Get text output
+    text = pytesseract.image_to_string(image)
+    # Get HOCR output
+    # hocr = repr( pytesseract.image_to_pdf_or_hocr(image, extension='hocr'))
+    # Get ALTO XML output
+    # alto = repr(pytesseract.image_to_alto_xml(image))
+
+    instruction = f"""
     You are a health professional, a doctor or a pharmacist.
 
-    Extract all information from this medication plan or medical prescription.
+    Extract all information from this medication plan or medical prescription from this input: 
+
+    [INPUT]
+
+    {text}
+
+    [END_INPUT]
 
     """
 
@@ -97,11 +102,11 @@ if __name__ == "__main__":
 
     print("Model: {}".format(model))
     print("Prompt: {}".format(prompt))
-    print("Nubmer of images (pages): {}".format(len(images_base64)))
+    print("Input file: {}".format(file_path))
 
-    payload = {"model": model, "prompt": prompt, "images": images_base64}
+    payload = {"model": model, "prompt": prompt}
 
-    print("Calling model {}...".format(model))
+    print("Calling model...")
     response = requests.post(OLLAMA_API_URL, json=payload, verify=False)
     response.raise_for_status()
 

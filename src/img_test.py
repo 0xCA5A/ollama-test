@@ -1,10 +1,13 @@
-import requests
 import base64
-import os
 import json
+import os
+import requests
+
+# Ollama API Spec:
+# https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
 
 
-OLLAMA_API_URL = "http://localhost:11434/api/generate"
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
 
 
 def encode_image(image_path):
@@ -13,6 +16,10 @@ def encode_image(image_path):
 
 
 if __name__ == "__main__":
+    # Vision models: can handle both images and text. They accept images as input and can describe, analyze, or reason
+    # about their content
+    model = os.getenv("OLLAMA_MODEL", "llama3.2-vision:11b")
+
     file_path = os.getenv("FILE_PATH")
 
     if not file_path:
@@ -20,9 +27,6 @@ if __name__ == "__main__":
 
     image_base64 = encode_image(file_path)
 
-    # Vision models: can handle both images and text. They accept images as input and can describe, analyze, or reason
-    # about their content
-    model = "llava:34b"
     prompt = """
     Describe this image. What can you see?
     """
@@ -31,10 +35,10 @@ if __name__ == "__main__":
     print("Prompt: {}".format(prompt))
     print("Input file: {}".format(file_path))
 
-    payload = {"model": model, "prompt": prompt, "image": image_base64}
+    payload = {"model": model, "prompt": prompt, "images": [image_base64]}
 
     print("Calling model...")
-    response = requests.post(OLLAMA_API_URL, json=payload)
+    response = requests.post(OLLAMA_API_URL, json=payload, verify=False)
     response.raise_for_status()
 
     ndjson_data = [json.loads(line) for line in response.text.splitlines()]

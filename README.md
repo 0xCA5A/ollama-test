@@ -53,13 +53,12 @@ podman run -d \
 Fetch the models you want to use:
 
 ```shell
-ollama pull llama3.3
+ollama pull llama3.2:3b
 ```
 
 ```shell
 ollama list
 ```
-
 Prepare the Python environment:
 
 ```shell
@@ -67,6 +66,10 @@ pipenv install
 ```
 
 ## Run tests
+
+```shell
+OLLAMA_API_URL=https://external.ollama.ch/api/generate OLLAMA_MODEL=llama3.2-vision:11b FILE_PATH=data/eMediplan_de.pdf pipenv run python3.10 src/pdf_test.py
+```
 
 ```
 $ grep run Makefile
