@@ -20,7 +20,7 @@ if __name__ == "__main__":
     # about their content
     model = os.getenv("OLLAMA_MODEL", "llama3.2-vision:11b")
 
-    file_path = os.getenv("FILE_PATH")
+    file_path = os.getenv("FILE_PATH", "data/bug.jpg")
 
     if not file_path:
         raise Exception("mandatory FILE_PATH environment variable is not set")
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     payload = {"model": model, "prompt": prompt, "images": [image_base64]}
 
     print("Calling model...")
-    response = requests.post(OLLAMA_API_URL, json=payload, verify=False)
+    response = requests.post(OLLAMA_API_URL, json=payload, verify=True)
     response.raise_for_status()
 
     ndjson_data = [json.loads(line) for line in response.text.splitlines()]

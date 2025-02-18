@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # about their content
     model = os.getenv("OLLAMA_MODEL", "llama3.2-vision:11b")
 
-    file_path = os.getenv("FILE_PATH")
+    file_path = os.getenv("FILE_PATH", "data/eMediplan_de.pdf")
 
     if not file_path:
         raise Exception("mandatory FILE_PATH environment variable is not set")

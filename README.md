@@ -59,26 +59,19 @@ ollama pull llama3.2:3b
 ```shell
 ollama list
 ```
+
 Prepare the Python environment:
 
 ```shell
-pipenv install
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ## Run tests
 
 ```shell
-OLLAMA_API_URL=https://external.ollama.ch/api/generate OLLAMA_MODEL=llama3.2-vision:11b FILE_PATH=data/eMediplan_de.pdf pipenv run python3.10 src/pdf_test.py
-```
-
-```
-$ grep run Makefile
-run_text: env
-	pipenv run python3.10 src/text_test.py
-run_img: env
-	FILE_PATH=data/bug.jpg pipenv run python3.10 src/img_test.py
-run_pdf: env
-	LD_LIBRARY_PATH=$(shell find /nix/ -name "libstdc++.so.6" | head -n 1 | xargs dirname) FILE_PATH=data/eMediplan_de.pdf pipenv run python3.10 src/pdf_test.py
+OLLAMA_API_URL=https://external.ollama.ch/api/generate OLLAMA_MODEL=llama3.2-vision:11b FILE_PATH=data/eMediplan_de.pdf make src/pdf_test.py
 ```
 
 or simply
