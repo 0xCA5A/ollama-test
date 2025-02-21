@@ -5,7 +5,9 @@ import os
 # https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
 
 
-OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+OLLAMA_API_MODEL_TAGS_URL = OLLAMA_API_URL + "/api/tags"
+OLLAMA_API_GENERATE_URL = OLLAMA_API_URL + "/api/generate"
 
 
 if __name__ == "__main__":
@@ -23,7 +25,7 @@ if __name__ == "__main__":
     print("Prompt: {}".format(prompt))
 
     print("Calling model...")
-    response = requests.post(OLLAMA_API_URL, json=payload, verify=False)
+    response = requests.post(OLLAMA_API_GENERATE_URL, json=payload)
     response.raise_for_status()
 
     if response.status_code != 200:

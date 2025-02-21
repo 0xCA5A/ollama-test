@@ -101,7 +101,7 @@ make run_text
 - handles a large amount of specific data efficient (memory, processing capacity), pulls only out what is necessary for
   the query
 - can refer to dynamically changing sources
-- good aproach if complex data sets are provided
+- good approach if complex data sets are provided
 - more dynamic and scalable approach
 - use case for handling large and evolving databases
 - responses reflect the most up-to-date information available

@@ -7,7 +7,9 @@ import requests
 # https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
 
 
-OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+OLLAMA_API_MODEL_TAGS_URL = OLLAMA_API_URL + "/api/tags"
+OLLAMA_API_GENERATE_URL = OLLAMA_API_URL + "/api/generate"
 
 
 def encode_image(image_path):
@@ -38,7 +40,7 @@ if __name__ == "__main__":
     payload = {"model": model, "prompt": prompt, "images": [image_base64]}
 
     print("Calling model...")
-    response = requests.post(OLLAMA_API_URL, json=payload, verify=True)
+    response = requests.post(OLLAMA_API_GENERATE_URL, json=payload)
     response.raise_for_status()
 
     ndjson_data = [json.loads(line) for line in response.text.splitlines()]
