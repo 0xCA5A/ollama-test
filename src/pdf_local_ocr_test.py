@@ -15,7 +15,7 @@ OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generat
 if __name__ == "__main__":
     model = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
 
-    file_path = os.getenv("FILE_PATH")
+    file_path = os.getenv("FILE_PATH", "data/eMediplan_de.pdf")
 
     if not file_path:
         raise Exception("mandatory FILE_PATH environment variable is not set")
