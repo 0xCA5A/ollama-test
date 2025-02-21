@@ -1,14 +1,19 @@
-import requests
 import base64
 import json
-from pdf2image import convert_from_path
 import os
+import sys
+import time
+
+import requests
+from pdf2image import convert_from_path
 
 # Ollama API Spec:
 # https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
 
 
-OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+OLLAMA_API_MODEL_TAGS_URL = OLLAMA_API_URL + "/api/tags"
+OLLAMA_API_GENERATE_URL = OLLAMA_API_URL + "/api/generate"
 
 
 def encode_image(image_path):
@@ -21,10 +26,18 @@ if __name__ == "__main__":
     # about their content
     model = os.getenv("OLLAMA_MODEL", "llama3.2-vision:11b")
 
-    file_path = os.getenv("FILE_PATH", "data/eMediplan_de.pdf")
+    response = requests.get(OLLAMA_API_MODEL_TAGS_URL)
+    response.raise_for_status()
 
-    if not file_path:
-        raise Exception("mandatory FILE_PATH environment variable is not set")
+    supported_model_names = [model["name"] for model in response.json()["models"]]
+
+    if model not in supported_model_names:
+        print(
+            f"Model {model} is not supported. Supported models: {supported_model_names}"
+        )
+        sys.exit(1)
+
+    file_path = os.getenv("FILE_PATH", "data/eMediplan_de.pdf")
 
     # PDF to image
     pdf_page_images = convert_from_path(file_path, dpi=300)
@@ -45,15 +58,20 @@ if __name__ == "__main__":
     details = """
     The medical prescription or medication plan can be provided is in German, French or Italian language.
 
-    The result is expected to be in this format:
+    Format the information found in the input document as a JSON object with the following structure:
     {
+        "prescription": {
+            "issueDate": "",
+        },
         "prescribingDoctor": {
             "academicTitle": "",
             "givenName": "",
             "familyName": "",
+            "medicalPracticeName": "",
+            "addressLine": "",
             "zsrNumber": "",
-            "gln": "",
-        }
+            "gln": ""
+        },
         "patient": {
             "givenName": "",
             "familyName": "",
@@ -62,52 +80,79 @@ if __name__ == "__main__":
             "addressLine": "",
             "postalCode": "",
             "city": ""
-        }
+        },
         "medication": [
             {
+                "prescribedQuantity": "",
                 "name": "",
                 "unit": "",
-                "intakeInstruction: "",
+                "intakeInstruction": "",
                 "remark": ""
             }
         ]
     }
 
+    Some additional information about patterns and numbers expected in the input document:
+
+    The prescriptions issue date (issueDate) is in the format DD.MM.YYYY.
+
+
+    The prescribing doctor's academic title (academicTitle) is a string.
+    Example: Dr. med. dent.
+
+    The prescribing doctor's GLN (gln) is a 13-digit number that uniquely identifies a company or part of a company worldwide.
+
+    The prescribing doctor's ZSR number (zsrNumber) is a 7-digit number.
+    Example: A123456 (compact), A 1234.56 (extended)
+
+
+    The patients birth date (birthDate) is in the format DD.MM.YYYY.
+
     The patients postal code (postalCode) and the city (city) are related to each other.
     The postal code format is a number with 4 digits.
 
-    The medicament intake instructions instruct the patient how to take the medication.
+
+    The medicaments are often listend in tabular form in the input document.
+
+    The medicament intake instruction (intakeInstruction) instruct the patient how to take the medication.
     The instructions refer to daytime signs such as morning, noon, evening and night.
     The format of the intake instruction in German is
-     - Mo (Morgen) for morning
-     - Mi (Mittag) for midday
-     - Ab (Abends) for evening
-     - Na (zur Nacht) for night
+     - Mo (short form for German Morgen) for English morning
+     - Mi (short form for German Mittag) for English midday
+     - Ab (short form for German Abends) for English evening
+     - Na (short form for German zur Nacht) for English night
     For each time of day, a numerical value defines how much of a medication a patient must take.
+    Blank in the medication table means 0 (zero) units.
 
     The short format is 0-0-0-0.
 
     An example would be 1-0-0.5-0.
     This means one unit in the morning, 0.5 unit in the evening.
 
-    If the intake instruction found does not match the specified format, the information should be returned as remark.
+    If the intake instruction found does not match the specified format, the information should be returned as remark (remark).
     """
 
     prompt = instruction + details
 
-    print("Model: {}".format(model))
-    print("Prompt: {}".format(prompt))
-    print("Nubmer of images (pages): {}".format(len(images_base64)))
+    print(f"Prompt: {prompt}")
+    print(f"Processing file: {file_path}")
+    print(f"Model: {model}")
+    print(f"Number of images (PDF pages): {len(images_base64)}")
 
     payload = {"model": model, "prompt": prompt, "images": images_base64}
 
-    print("Calling model {}...".format(model))
-    response = requests.post(OLLAMA_API_URL, json=payload, verify=False)
+    print(f"Calling model {model} @ {OLLAMA_API_URL}...")
+    start_time = time.time()
+    response = requests.post(OLLAMA_API_GENERATE_URL, json=payload)
+    end_time = time.time()
     response.raise_for_status()
+
+    call_duration = end_time - start_time
+    print(f"Call duration: {call_duration} seconds")
 
     ndjson_data = [json.loads(line) for line in response.text.splitlines()]
 
     tokens = [x["response"] for x in ndjson_data]
     response = "".join(tokens)
 
-    print("Response: {}".format(response))
+    print(f"Response: {response}")
