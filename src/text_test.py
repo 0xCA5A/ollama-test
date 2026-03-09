@@ -33,6 +33,4 @@ if __name__ == "__main__":
 
     print("Raw ollama response:\n", response.text)
 
-    print(
-        "Response: {}".format(response.json().get("response", "No response generated."))
-    )
+    print("Response: {}".format(response.json().get("response", "No response generated.")))
