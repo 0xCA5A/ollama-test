@@ -6,7 +6,6 @@ import ollama
 logger = logging.getLogger(__name__)
 
 MEDICAL_MODELS = ["medllama2:7b", "meditron:7b"]
-TRANSLATION_MODEL = "mistral-small3.1:24b"
 
 MEDICAL_SYSTEM_PROMPT = """\
 Du bist ein erfahrener Arzt. Analysiere die folgende Anamnese eines Patienten.
@@ -22,74 +21,6 @@ TRANSLATION_PROMPT = """\
 Behalte die Struktur und Formatierung bei. \
 Gib nur die Übersetzung aus, ohne Kommentar.
 """
-
-COMMON_GERMAN_WORDS = frozenset(
-    [
-        "der",
-        "die",
-        "das",
-        "und",
-        "ist",
-        "in",
-        "zu",
-        "den",
-        "von",
-        "mit",
-        "ein",
-        "eine",
-        "für",
-        "auf",
-        "nicht",
-        "sich",
-        "des",
-        "dem",
-        "es",
-        "auch",
-        "nach",
-        "wird",
-        "bei",
-        "einer",
-        "um",
-        "am",
-        "sind",
-        "noch",
-        "wie",
-        "einem",
-        "über",
-        "so",
-        "zum",
-        "kann",
-        "wurde",
-        "haben",
-        "nur",
-        "oder",
-        "aber",
-        "vor",
-        "zur",
-        "bis",
-        "mehr",
-        "durch",
-        "man",
-        "dann",
-        "soll",
-        "sehr",
-        "wenn",
-        "keine",
-        "schon",
-        "werden",
-        "patient",
-        "patienten",
-        "diagnose",
-        "therapie",
-        "behandlung",
-        "symptome",
-        "anamnese",
-        "befund",
-        "beurteilung",
-    ]
-)
-
-GERMAN_WORD_RATIO_THRESHOLD = 0.08
 
 
 def check_connection():
@@ -117,20 +48,42 @@ def select_model():
         print("Ungültige Auswahl, bitte erneut versuchen.")
 
 
-def validate_models(medical_model):
+def get_available_models():
     response = ollama.list()
-    available = {m.model for m in response.models}
+    return {m.model for m in response.models}
 
-    missing = []
-    for required in [medical_model, TRANSLATION_MODEL]:
-        if required not in available:
-            missing.append(required)
 
+def validate_models(available, *models):
+    missing = [m for m in models if m not in available]
     if missing:
         print("Fehler: Folgende Modelle sind nicht verfügbar:", file=sys.stderr)
         for m in missing:
             print(f"  - {m} (ollama pull {m})", file=sys.stderr)
         sys.exit(1)
+
+
+def ask_translate(available):
+    choice = input("\nAntwort ins Deutsche übersetzen? (j/n): ").strip().lower()
+    if choice not in ("j", "ja", "y", "yes"):
+        return None
+    return select_translation_model(available)
+
+
+def select_translation_model(available):
+    models = sorted(available)
+    print("\nVerfügbare Modelle für Übersetzung:")
+    for i, model in enumerate(models, 1):
+        print(f"  {i}) {model}")
+
+    while True:
+        choice = input("\nÜbersetzungsmodell wählen (Nummer): ").strip()
+        try:
+            index = int(choice) - 1
+            if 0 <= index < len(models):
+                return models[index]
+        except ValueError:
+            pass
+        print("Ungültige Auswahl, bitte erneut versuchen.")
 
 
 def read_anamnesis():
@@ -161,19 +114,11 @@ def query_medical_model(model, anamnesis):
     return response.message.content
 
 
-def is_german(text):
-    words = text.lower().split()
-    if not words:
-        return True
-    german_count = sum(1 for w in words if w.strip(".,;:!?()") in COMMON_GERMAN_WORDS)
-    return (german_count / len(words)) >= GERMAN_WORD_RATIO_THRESHOLD
-
-
-def translate_to_german(text):
-    print("Antwort wird ins Deutsche übersetzt...")
+def translate_to_german(text, model):
+    print(f"\nÜbersetzung mit {model} läuft...")
     try:
         response = ollama.chat(
-            model=TRANSLATION_MODEL,
+            model=model,
             messages=[
                 {"role": "system", "content": TRANSLATION_PROMPT},
                 {"role": "user", "content": text},
@@ -190,15 +135,18 @@ def main():
     print("=== Medizinische Anamnese-Analyse ===")
 
     check_connection()
+    available = get_available_models()
 
-    model = select_model()
-    validate_models(model)
+    medical_model = select_model()
+    validate_models(available, medical_model)
+
+    translation_model = ask_translate(available)
 
     anamnesis = read_anamnesis()
-    result = query_medical_model(model, anamnesis)
+    result = query_medical_model(medical_model, anamnesis)
 
-    if not is_german(result):
-        result = translate_to_german(result)
+    if translation_model:
+        result = translate_to_german(result, translation_model)
 
     print(f"\n{'=' * 50}")
     print("Ergebnis:")
