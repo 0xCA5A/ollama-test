@@ -87,15 +87,13 @@ def select_translation_model(available):
 
 
 def read_anamnesis():
-    print("\nAnamnese eingeben (leere Zeile zum Beenden):")
-    lines = []
-    while True:
-        line = input()
-        if not line:
-            break
-        lines.append(line)
+    print("\nAnamnese eingeben (Ctrl+D zum Beenden):")
+    try:
+        text = sys.stdin.read()
+    except KeyboardInterrupt:
+        print()
+        sys.exit(130)
 
-    text = "\n".join(lines)
     if not text.strip():
         print("Fehler: Keine Anamnese eingegeben.", file=sys.stderr)
         sys.exit(1)
