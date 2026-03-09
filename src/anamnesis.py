@@ -143,6 +143,13 @@ def main():
     translation_model = ask_translate(available)
 
     anamnesis = read_anamnesis()
+
+    print(f"\n{'=' * 50}")
+    print("Prompt:")
+    print(f"{'=' * 50}")
+    print(MEDICAL_SYSTEM_PROMPT)
+    print(anamnesis)
+
     result = query_medical_model(medical_model, anamnesis)
 
     if translation_model:
