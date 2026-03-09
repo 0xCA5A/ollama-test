@@ -18,8 +18,16 @@ podman run -d \
 
 ## Pull models
 
-```shell 
+```shell
 podman exec -it ollama ollama pull deepseek-r1:14b
+```
+
+### Anamnesis models
+
+```shell
+ollama pull medllama2:7b
+ollama pull meditron:7b
+ollama pull mistral-small3.1:24b
 ```
 
 ## Shell hint
@@ -29,6 +37,14 @@ alias ollama="podman exec -it ollama ollama"
 ```
 
 Model source: https://ollama.com/search
+
+### Remote Ollama
+
+Set `OLLAMA_HOST` to connect to a remote Ollama instance:
+
+```shell
+export OLLAMA_HOST=https://ollama.example.com
+```
 
 # Ollama Open WebUI
 
@@ -50,6 +66,12 @@ podman run -d \
 
 ## Code Setup
 
+Install dependencies with Poetry:
+
+```shell
+poetry install
+```
+
 Fetch the models you want to use:
 
 ```shell
@@ -60,24 +82,39 @@ ollama pull llama3.2:3b
 ollama list
 ```
 
-Prepare the Python environment:
-
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-## Run tests
-
-```shell
-OLLAMA_API_URL=https://external.ollama.ch/api/generate OLLAMA_MODEL=llama3.2-vision:11b FILE_PATH=data/eMediplan_de.pdf make src/pdf_test.py
-```
-
-or simply
+## Run demos
 
 ```shell
 make run_text
+make run_img
+make run_pdf
+make run_pdf_local_ocr
+make run_anamnesis
+```
+
+Or with environment overrides:
+
+```shell
+OLLAMA_HOST=https://external.ollama.ch make run_pdf
+```
+
+## Linting
+
+```shell
+make check
+make format
+```
+
+# Anamnesis CLI
+
+Interactive medical anamnesis analysis tool. Sends a patient anamnesis (German) to a medical LLM and translates the response to German if needed.
+
+Required models:
+- `medllama2:7b` or `meditron:7b` (medical analysis)
+- `mistral-small3.1:24b` (translation fallback)
+
+```shell
+make run_anamnesis
 ```
 
 # Theory
