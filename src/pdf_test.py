@@ -32,9 +32,7 @@ if __name__ == "__main__":
     supported_model_names = [model["name"] for model in response.json()["models"]]
 
     if model not in supported_model_names:
-        print(
-            f"Model {model} is not supported. Supported models: {supported_model_names}"
-        )
+        print(f"Model {model} is not supported. Supported models: {supported_model_names}")
         sys.exit(1)
 
     file_path = os.getenv("FILE_PATH", "data/eMediplan_de.pdf")
@@ -60,27 +58,6 @@ if __name__ == "__main__":
 
     Format the information found in the input document as a JSON object with the following structure:
     {
-        "prescription": {
-            "issueDate": "",
-        },
-        "prescribingDoctor": {
-            "academicTitle": "",
-            "givenName": "",
-            "familyName": "",
-            "medicalPracticeName": "",
-            "addressLine": "",
-            "zsrNumber": "",
-            "gln": ""
-        },
-        "patient": {
-            "givenName": "",
-            "familyName": "",
-            "birthDate": "",
-            "sex": "",
-            "addressLine": "",
-            "postalCode": "",
-            "city": ""
-        },
         "medication": [
             {
                 "prescribedQuantity": "",
@@ -93,24 +70,6 @@ if __name__ == "__main__":
     }
 
     Some additional information about patterns and numbers expected in the input document:
-
-    The prescriptions issue date (issueDate) is in the format DD.MM.YYYY.
-
-
-    The prescribing doctor's academic title (academicTitle) is a string.
-    Example: Dr. med. dent.
-
-    The prescribing doctor's GLN (gln) is a 13-digit number that uniquely identifies a company or part of a company worldwide.
-
-    The prescribing doctor's ZSR number (zsrNumber) is a 7-digit number.
-    Example: A123456 (compact), A 1234.56 (extended)
-
-
-    The patients birth date (birthDate) is in the format DD.MM.YYYY.
-
-    The patients postal code (postalCode) and the city (city) are related to each other.
-    The postal code format is a number with 4 digits.
-
 
     The medicaments are often listend in tabular form in the input document.
 

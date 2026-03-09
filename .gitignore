@@ -1,2 +1,5 @@
 .direnv
 .venv
+__pycache__/
+*.pyc
+tmp/

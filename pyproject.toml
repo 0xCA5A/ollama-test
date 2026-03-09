@@ -1,0 +1,31 @@
+[project]
+name = "ollama-test"
+version = "0.1.0"
+description = "Ollama API demos and medical anamnesis CLI"
+requires-python = ">=3.13"
+
+dependencies = [
+    "ollama",
+    "requests",
+    "httpx",
+    "pdf2image",
+    "pytesseract",
+    "pillow",
+    "pydantic",
+]
+
+[project.scripts]
+anamnesis = "src.anamnesis:main"
+
+[tool.poetry]
+packages = [{include = "src"}]
+
+[tool.poetry.group.dev.dependencies]
+ruff = "*"
+
+[tool.ruff]
+line-length = 120
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
