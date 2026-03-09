@@ -3,7 +3,7 @@
 pkgs.mkShell {
 
   buildInputs = with pkgs; [
-    python314
+    python313
     poetry
 
     poppler_utils
