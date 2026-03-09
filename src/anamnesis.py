@@ -5,7 +5,7 @@ import ollama
 
 logger = logging.getLogger(__name__)
 
-MEDICAL_MODELS = ["medllama2:7b", "meditron:7b"]
+MEDICAL_MODELS = ["medllama2:7b", "meditron:7b", "meditron:70b"]
 
 MEDICAL_SYSTEM_PROMPT = """\
 Du bist ein erfahrener Arzt. Analysiere die folgende Anamnese eines Patienten.
