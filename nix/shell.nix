@@ -3,7 +3,8 @@
 pkgs.mkShell {
 
   buildInputs = with pkgs; [
-    python310Packages.pip
+    python314
+    poetry
 
     poppler_utils
     tesseract4
